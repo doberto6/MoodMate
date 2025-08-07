@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodMate - Psychology-Inspired Mood Journal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .mood-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .mood-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .mood-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mood-1 { background: #ff6b6b; color: white; }
+        .mood-2 { background: #ffa726; color: white; }
+        .mood-3 { background: #ffeb3b; color: #333; }
+        .mood-4 { background: #66bb6a; color: white; }
+        .mood-5 { background: #4caf50; color: white; }
+
+        .mood-btn.selected {
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .insights {
+            grid-column: 1 / -1;
+        }
+
+        .insight-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .insight-item h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .entry-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .entry-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+        }
+
+        .entry-date {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .entry-mood {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .entry-content {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .sentiment-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .sentiment-positive { background: #d4edda; color: #155724; }
+        .sentiment-negative { background: #f8d7da; color: #721c24; }
+        .sentiment-neutral { background: #d1ecf1; color: #0c5460; }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .mood-selector {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 MoodMate</h1>
+            <p>Psychology-Inspired Mood Journal & Sentiment Analysis</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Journal Entry Section -->
+            <div class="card">
+                <h2>📝 Daily Journal Entry</h2>
+                <div class="mood-selector">
+                    <button class="mood-btn mood-1" data-mood="1" data-label="Very Sad">😢 Very Sad</button>
+                    <button class="mood-btn mood-2" data-mood="2" data-label="Sad">😔 Sad</button>
+                    <button class="mood-btn mood-3" data-mood="3" data-label="Neutral">😐 Neutral</button>
+                    <button class="mood-btn mood-4" data-mood="4" data-label="Happy">😊 Happy</button>
+                    <button class="mood-btn mood-5" data-mood="5" data-label="Very Happy">😄 Very Happy</button>
+                </div>
+                <textarea id="journalEntry" rows="6" placeholder="How are you feeling today? What's on your mind? Write about your thoughts, experiences, and emotions..."></textarea>
+                <button class="btn-primary" onclick="saveEntry()">Save Entry</button>
+            </div>
+
+            <!-- Mood Trends Chart -->
+            <div class="card">
+                <h2>📊 Mood Trends (Last 30 Days)</h2>
+                <div class="chart-container">
+                    <canvas id="moodChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="card">
+            <h2>📈 Your Statistics</h2>
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEntries">0</div>
+                    <div>Total Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgMood">0.0</div>
+                    <div>Average Mood</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="streakDays">0</div>
+                    <div>Day Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="positiveRatio">0%</div>
+                    <div>Positive Entries</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Psychology Insights -->
+        <div class="card insights">
+            <h2>🧠 Psychology Insights & CBT Reflections</h2>
+            <div id="insightsList">
+                <div class="insight-item">
+                    <h3>Getting Started</h3>
+                    <p>Welcome to MoodMate! Start by logging your daily mood and thoughts. Regular journaling has been shown to improve emotional regulation and self-awareness. The app will analyze your patterns and provide personalized insights based on cognitive behavioral therapy (CBT) principles.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Entries -->
+        <div class="card">
+            <h2>📖 Recent Entries</h2>
+            <div class="entry-list" id="entriesList">
+                <p style="text-align: center; color: #666; font-style: italic;">No entries yet. Start journaling to see your entries here!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MoodMate Full-Stack JavaScript
+class MoodMate {
+    constructor() {
+        this.selectedMood = null;
+        this.entries = [];
+        this.moodChart = null;
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.loadEntries();
+        this.updateDashboard();
+    }
+
+    setupEventListeners() {
+        // Mood selection
+        document.querySelectorAll('.mood-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.selectMood(e.target));
+        });
+    }
+
+    selectMood(btn) {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        this.selectedMood = {
+            value: parseInt(btn.dataset.mood),
+            label: btn.dataset.label
+        };
+    }
+
+    async saveEntry() {
+        const content = document.getElementById('journalEntry').value.trim();
+        
+        if (!this.selectedMood) {
+            this.showAlert('Please select your mood first!', 'warning');
+            return;
+        }
+        
+        if (!content) {
+            this.showAlert('Please write something in your journal entry!', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/entries', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mood: this.selectedMood.value,
+                    content: content
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showAlert('Entry saved successfully! 🎉', 'success');
+                this.resetForm();
+                await this.loadEntries();
+                this.updateDashboard();
+            } else {
+                this.showAlert('Failed to save entry. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving entry:', error);
+            this.showAlert('Network error. Please try again.', 'error');
+        }
+    }
+
+    async loadEntries() {
+        try {
+            const response = await fetch('/api/entries');
+            this.entries = await response.json();
+        } catch (error) {
+            console.error('Error loading entries:', error);
+            this.entries = [];
+        }
+    }
+
+    async loadAnalytics() {
+        try {
+            const response = await fetch('/api/analytics');
+            return await response.json();
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+            return {
+                total_entries: 0,
+                avg_mood: 0,
+                streak_days: 0,
+                positive_ratio: 0,
+                insights: []
+            };
+        }
+    }
+
+    async updateDashboard() {
+        const analytics = await this.loadAnalytics();
+        this.updateStats(analytics);
+        this.updateMoodChart();
+        this.updateEntriesList();
+        this.updateInsights(analytics.insights);
+    }
+
+    updateStats(analytics) {
+        document.getElementById('totalEntries').textContent = analytics.total_entries;
+        document.getElementById('avgMood').textContent = analytics.avg_mood;
+        document.getElementById('streakDays').textContent = analytics.streak_days;
+        document.getElementById('positiveRatio').textContent = analytics.positive_ratio + '%';
+    }
+
+    updateMoodChart() {
+        const ctx = document.getElementById('moodChart').getContext('2d');
+        
+        if (this.moodChart) {
+            this.moodChart.destroy();
+        }
+
+        // Prepare data for last 30 days
+        const last30Days = this.prepareChartData();
+
+        this.moodChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: last30Days.map(day => day.date),
+                datasets: [{
+                    label: 'Daily Mood',
+                    data: last30Days.map(day => day.mood),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 1,
+                        max: 5,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                const moodLabels = {1: 'Very Sad', 2: 'Sad', 3: 'Neutral', 4: 'Happy', 5: 'Very Happy'};
+                                return moodLabels[value] || value;
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: { maxTicksLimit: 10 }
+                    }
+                },
+                spanGaps: true
+            }
+        });
+    }
+
+    prepareChartData() {
+        const last30Days = [];
+        const today = new Date();
+        
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            
+            const dayEntries = this.entries.filter(entry => {
+                const entryDate = new Date(entry.timestamp);
+                entryDate.setHours(0, 0, 0, 0);
+                return entryDate.getTime() === date.getTime();
+            });
+            
+            const avgMood = dayEntries.length > 0 ? 
+                dayEntries.reduce((sum, entry) => sum + entry.mood_rating, 0) / dayEntries.length : null;
+            
+            last30Days.push({
+                date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                mood: avgMood
+            });
+        }
+        
+        return last30Days;
+    }
+
+    updateEntriesList() {
+        const entriesList = document.getElementById('entriesList');
+        
+        if (this.entries.length === 0) {
+            entriesList.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No entries yet. Start journaling to see your entries here!</p>';
+            return;
+        }
+
+        const recentEntries = this.entries.slice(0, 10);
+        entriesList.innerHTML = recentEntries.map(entry => {
+            const date = new Date(entry.timestamp).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            const moodColors = {
+                1: '#ff6b6b', 2: '#ffa726', 3: '#ffeb3b', 4: '#66bb6a', 5: '#4caf50'
+            };
+
+            const moodLabels = {
+                1: 'Very Sad', 2: 'Sad', 3: 'Neutral', 4: 'Happy', 5: 'Very Happy'
+            };
+            
+            return `
+                <div class="entry-item" style="border-left-color: ${moodColors[entry.mood_rating]}">
+                    <div class="entry-date">${date}</div>
+                    <div class="entry-mood" style="color: ${moodColors[entry.mood_rating]}">${moodLabels[entry.mood_rating]}</div>
+                    <div class="entry-content">${entry.content}</div>
+                    <span class="sentiment-badge sentiment-${entry.sentiment_label || 'neutral'}">${(entry.sentiment_label || 'neutral').charAt(0).toUpperCase() + (entry.sentiment_label || 'neutral').slice(1)} sentiment</span>
+                </div>
+                    `;
+                }).join('');
+            }
+
+            updateInsights(insights) {
+                const insightsList = document.getElementById('insightsList');
+        
+                if (insights.length === 0) {
+                    insightsList.innerHTML = `
+                        <div class="insight-item">
+                            <h3>Getting Started</h3>
+                            <p>Welcome to MoodMate! Start by logging your daily mood and thoughts. Regular journaling has been shown to improve emotional regulation and self-awareness. The app will analyze your patterns and provide personalized insights based on cognitive behavioral therapy (CBT) principles.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                insightsList.innerHTML = insights.map(insight => `
+                    <div class="insight-item">
+                        <h3>${insight.title}</h3>
+                        <p>${insight.content}</p>
+                    </div>
+                `).join('');
+            }
+
+            resetForm() {
+                document.getElementById('journalEntry').value = '';
+                document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+                this.selectedMood = null;
+            }
+
+            showAlert(message, type) {
+                // Simple alert for now - could be enhanced with better UI
+                alert(message);
+            }
+        }
+
+        // Global function for the save button
+        function saveEntry() {
+            if (window.moodMate) {
+                window.moodMate.saveEntry();
+            }
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.moodMate = new MoodMate();
+        });
+    </script>
+</body>
+</html>
