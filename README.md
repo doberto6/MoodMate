@@ -15,7 +15,7 @@
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 - **Frontend**: HTML, CSS, JavaScript
 - **Backend**: Python, Flask
@@ -27,5 +27,13 @@
 
 ---
 
-## 📂 File Structure
+##  File Structure
+MoodMate/
+├── static/
+│   ├── css/
+│   └── js/
+├── templates/
+├── database/
+├── tests/
+└── moodmate_env/
 
