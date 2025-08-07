@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MoodMate - Psychology-Inspired Mood Journal{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧠 MoodMate</h1>
+            <p>Psychology-Inspired Mood Journal & Sentiment Analysis</p>
+        </header>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer>
+            <p>&copy; 2025 MoodMate - Your Personal Psychology Assistant</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
